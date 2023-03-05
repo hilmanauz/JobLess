@@ -13,10 +13,12 @@ function JobCard({ data }: { data: Record<string, any> }) {
   return (
     <React.Fragment>
       <VStack
-        height={"100%"}
         textAlign={"start"}
         gap={3}
-        width={"full"}
+        width={{
+          sm: "100vw",
+          md: "full",
+        }}
         alignItems={"start"}
       >
         <HStack gap={2}>
@@ -27,13 +29,20 @@ function JobCard({ data }: { data: Record<string, any> }) {
               .join("+")}&background=random`}
             boxSize={"60px"}
           />
-          <VStack alignItems={"normal"}>
-            <Text fontSize={"md"} fontWeight={"semibold"}>
+          <VStack
+            alignItems={"normal"}
+            maxWidth={{
+              sm: "300px",
+              md: "200px",
+              lg: "300px",
+            }}
+          >
+            <Text fontSize={"md"} fontWeight={"semibold"} isTruncated>
               {data.title}
             </Text>
             <Text
-              display={"inline-block"}
               fontSize={"reg"}
+              isTruncated
               _hover={
                 data.company_url
                   ? {
@@ -42,7 +51,8 @@ function JobCard({ data }: { data: Record<string, any> }) {
                     }
                   : {}
               }
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 data.company_url && window.open(data.company_url, "_blank");
               }}
               color={"rgb(1, 126, 183)"}

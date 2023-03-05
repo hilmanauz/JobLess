@@ -39,8 +39,11 @@ import {
   useSession,
 } from "next-auth/react";
 import Image from "next/image";
+import { useData } from "@/useFetchData";
+import { useRouter } from "next/router";
+import HomeMobileView from "@/components/HomeMobileView";
+import HomeDesktopView from "@/components/HomeDesktopView";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const PAGE_SIZE = 10;
 
 export async function getServerSideProps(context: GetSessionParams) {
@@ -61,25 +64,8 @@ export async function getServerSideProps(context: GetSessionParams) {
 
 export default function Home() {
   const session = useSession();
-  const filterForm = useForm<{
-    full_time: boolean;
-    description: string;
-    location: string;
-  }>({
-    mode: "onSubmit",
-  });
-  const formData = Object.entries(filterForm.getValues()).filter(
-    ([key, value]) => value
-  );
-  const { data, mutate, size, setSize, isLoading } = useSWRInfinite(
-    (index: number) =>
-      `http://dev3.dansmultipro.co.id/api/recruitment/positions.json?${
-        formData.length
-          ? `${formData.map(([key, value]) => `${key}=${value}`).join("&")}&`
-          : ""
-      }page=${index + 1}`,
-    fetcher
-  );
+  const router = useRouter();
+  const { data, size, isLoading, setSize, filterForm, width } = useData();
   const jobs = React.useMemo(
     () => (data ? data.map((item) => item.filter((el: any) => el)) : []),
     [data]
@@ -95,23 +81,29 @@ export default function Home() {
     [jobs, PAGE_SIZE, isEmpty]
   );
 
-  const jobsData = React.useMemo(() => (jobs ? jobs.flat(1) : []), [jobs]);
-  const width = useBreakpointValue(
-    {
-      base: "sm",
-      md: "md",
-      lg: "lg",
-      xl: "xl",
+  React.useEffect(() => {
+    setSize?.(1);
+  }, []);
+
+  const handleScroll = React.useCallback(
+    (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
+      if (
+        e.currentTarget.scrollTop + e.currentTarget.offsetHeight + 1 >=
+          e.currentTarget.scrollHeight &&
+        !isReachingEnd
+      ) {
+        setSize?.(size + 1);
+      }
     },
-    {
-      fallback: "xl",
-    }
+    []
   );
+
+  const jobsData = React.useMemo(() => (jobs ? jobs.flat(1) : []), [jobs]);
 
   return (
     <div>
       <Head>
-        <title>JobLess: Find your Job instanly</title>
+        <title>JoBless: Find your Job instanly</title>
         <meta name={"description"} content={"wanna find your ideal job?"} />
       </Head>
       <main>
@@ -122,7 +114,10 @@ export default function Home() {
           overflow={"hidden"}
         >
           <Center h={"70px"} bgColor={"white"} width={"full"}>
-            <HStack width={"container." + (width || "xl")}>
+            <HStack
+              width={"container." + (width || "xl")}
+              paddingX={width === "sm" ? "20px" : "0"}
+            >
               <Image
                 src={"/icon.png"}
                 alt={"company"}
@@ -186,106 +181,31 @@ export default function Home() {
                 width={"100%"}
                 borderTopRadius={"xl"}
                 gridTemplateAreas={`"main"`}
-                marginTop={"2.4rem"}
+                marginTop={width !== "sm" ? "2.4rem" : "0"}
                 gridTemplateColumns={"100%"}
                 gridTemplateRows={"auto"}
                 boxShadow={"0px 0px 0px 1px rgba(0,0,0,0.08)"}
               >
                 <GridItem area={"main"} position={"relative"}>
-                  <Tabs
-                    orientation="vertical"
-                    isFitted
-                    variant="unstyled"
-                    height={"100%"}
-                    width={"100%"}
-                    overflow={"hidden"}
-                    position={"absolute"}
-                  >
-                    <Flex
-                      direction={"column"}
-                      flex={1.5}
-                      position={"relative"}
-                      borderRight={"1px solid rgba(0,0,0,0.08)"}
-                    >
-                      <HStack
-                        paddingX={"20px"}
-                        paddingRight={"25px"}
-                        paddingY={"8px"}
-                        width={"full"}
-                        backgroundColor={"#0a66c2"}
-                        borderTopLeftRadius={"xl"}
-                      >
-                        <Text
-                          color={"white"}
-                          fontSize={"reg"}
-                          fontWeight={"semibold"}
-                        >
-                          Recommended Jobs Curated for You
-                        </Text>
-                        <Spacer />
-                        <FormProvider {...filterForm}>
-                          <FilterPopover onSubmit={() => setSize(1)} />
-                        </FormProvider>
-                      </HStack>
-                      {isEmpty ? (
-                        <Center height={"full"}>
-                          <Text fontWeight={"bold"} fontSize={"xl"}>
-                            Result Not Found
-                          </Text>
-                        </Center>
-                      ) : (
-                        <TabList
-                          overflowY={"auto"}
-                          onScroll={(e) => {
-                            if (
-                              e.currentTarget.scrollTop +
-                                e.currentTarget.offsetHeight +
-                                1 >=
-                                e.currentTarget.scrollHeight &&
-                              !isReachingEnd
-                            ) {
-                              setSize(size + 1);
-                            }
-                          }}
-                        >
-                          {jobsData.map((item: any, i: number) => (
-                            <Tab
-                              key={i}
-                              borderRight={"2px solid rgb(243, 243, 243)"}
-                              borderBottom={"2px solid rgb(243, 243, 243)"}
-                              padding={"20px 16px"}
-                              _selected={{
-                                backgroundColor: "rgb(235, 245, 250)",
-                              }}
-                              justifyContent={"start"}
-                            >
-                              <JobCard data={item} />
-                            </Tab>
-                          ))}
-                        </TabList>
-                      )}
-                      {isLoadingMore && (
-                        <Center width={"full"} height={"100px"}>
-                          <CircularProgress
-                            isIndeterminate
-                            color="rgb(1, 126, 183)"
-                          />
-                        </Center>
-                      )}
-                    </Flex>
-                    <TabPanels
-                      flex={3}
-                      position={"relative"}
-                      marginTop={"14px"}
-                      overflowY={"auto"}
-                    >
-                      {jobsData.map((item: any) => (
-                        <TabPanel>
-                          <JobContent data={item} />
-                        </TabPanel>
-                      ))}
-                    </TabPanels>
-                  </Tabs>
+                  {width === "sm" ? (
+                    <HomeMobileView
+                      filterForm={filterForm}
+                      isEmpty={isEmpty}
+                      isLoadingMore={isLoadingMore}
+                      jobsData={jobsData}
+                      setSize={setSize}
+                      onScroll={handleScroll}
+                    />
+                  ) : (
+                    <HomeDesktopView
+                      filterForm={filterForm}
+                      isEmpty={isEmpty}
+                      isLoadingMore={isLoadingMore}
+                      jobsData={jobsData}
+                      setSize={setSize}
+                      onScroll={handleScroll}
+                    />
+                  )}
                 </GridItem>
               </Grid>
             </Flex>

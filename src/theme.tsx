@@ -17,12 +17,21 @@ export const menuListStyle: React.CSSProperties = {
   overflowY: "auto",
 };
 
+const breakpoints = {
+  sm: "320px",
+  md: "768px",
+  lg: "960px",
+  xl: "1200px",
+  "2xl": "1536px",
+};
+
 export const popoverContentFocusStyle = {
   border: "1px solid #E9E9E9",
   outline: "0px",
 };
 
 const theme = extendTheme({
+  breakpoints,
   styles: {
     global: {
       body: {
