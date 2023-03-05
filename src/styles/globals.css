@@ -1,0 +1,32 @@
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+*,
+:after,
+:before {
+  box-sizing: inherit;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6.5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track:hover {
+  box-shadow: inset 0 0 5px #dbe3f0;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #cccccc;
+  border-radius: 8px;
+}
